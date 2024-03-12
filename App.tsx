@@ -1,118 +1,160 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { Image, ImageBackground, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import React, {useState} from 'react'
+import Tts from 'react-native-tts';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+export default function App() {
+  const [newWord, setNewWord] = useState("");
+  const [checkedWord, setCheckedWord] = useState("");
+  const [definition, setDefinition] = useState("");
+  const [example, setExample] = useState("");
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  const searchWord = (enteredWord: any) => {
+    setNewWord(enteredWord);
+  }
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  const getInfo = () => {
+    var url = 'http://api.dictionaryapi.dev/api/v2/entries/en/' + newWord
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+    return fetch(url)
+      .then((data) => {
+        return data.json();
+      })
+      .then((response) => {
+        var word = response[0].word
+        setCheckedWord(word);
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+        var def = response[0].meanings[0].definitions[0].definition
+        setDefinition(def);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+        var example = response[0].meanings[0].definitions[0].example
+        setExample(example);
+      })
+  }
+
+  const speak = () => {
+    Tts.speak(checkedWord)
+  }
+
+  const clear = () => {
+    setNewWord("")
+    setCheckedWord("")
+    setDefinition("")
+    setExample("")
+  }
+
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    <View style={styles.container}>
+      <ImageBackground 
+        style={{flex: 1}}
+        resizeMode='cover'
+        source={require("./assets/background.png")}
+      >
+
+        <View style={{flex: 0.2}}>
+          <Image 
+          style={styles.imageDesign}
+            source={require("./assets/book1.png")}
+          />
         </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+
+        <View style={{flex: 0.8}}>
+          <View style={{justifyContent: "center", alignItems: "center"}}>
+            <TextInput
+            style={styles.inputBox}
+            placeholder='Search a word'
+            placeholderTextColor={"rgba(0,0,0,0.7)"}
+            textAlign='center'
+            clearButtonMode='always'
+            multiline={true}
+            onChangeText={searchWord}
+            value={newWord}
+            ></TextInput>
+
+          <View style={{
+            flexDirection: "row",
+            justifyContent: 'space-between',
+            width: "70%",
+            marginTop: 20,
+            marginBottom: 20
+            }}>
+            <TouchableOpacity style={styles.buttonDesign}
+              onPress={() => {
+                getInfo()
+              }}
+            >
+              <Text style={styles.textDesign}>Go !</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.buttonDesign}
+              onPress={() => {
+                clear()
+              }}
+            >
+              <Text style={styles.textDesign}>Clear</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{backgroundColor: "transparent"}}
+            onPress={() => {
+              speak()
+            }}
+            >
+              <Image
+              style={styles.speakerButton}
+                source={require("./assets/speaker.png")}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View>
+            <Text style={styles.textDesign}>Entered Word: {checkedWord}</Text>
+            <Text style={styles.textDesign}>Definition: {definition}</Text>
+            <Text style={styles.textDesign}>Example: {example}</Text>
+          </View>
+
+          </View>
+        </View>
+      </ImageBackground>
+
+      <StatusBar />
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    backgroundColor: "#fff"
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
-export default App;
+  imageDesign: {
+    width: "50%",
+    height: "130%",
+    marginLeft: 90,
+    marginTop: 40
+  },
+  inputBox: {
+    width: "80%",
+    height: 50,
+    borderWidth: 5,
+    borderColor: 'rgba(80, 235, 235, 1)',
+    marginTop: 100,
+    fontSize: 25
+  },
+  speakerButton: {
+    width: 60,
+    height: 50,
+  },
+  buttonDesign: {
+    backgroundColor: "rgba(80, 235, 236, 0.3)",
+    width: "30%",
+    height: 60,
+    borderColor: "#000",
+    borderRadius: 20,
+  },
+  textDesign: {
+    fontSize: 25,
+    alignSelf: "center",
+    padding: 10,
+  }
+})
